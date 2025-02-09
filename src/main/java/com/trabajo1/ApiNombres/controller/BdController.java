@@ -4,10 +4,9 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.trabajo1.ApiNombres.models.Names;
@@ -20,13 +19,14 @@ public class BdController {
     private NamesRepositories namesRepositories;
 
     @PostMapping("/api/sendNames")
-    public ResponseEntity<Names> save(@RequestParam String namein){
-        Names name = new Names(namein);
-        return ResponseEntity.ok().body(namesRepositories.save(name));
+    public String save(@RequestBody Names name) {
+        return namesRepositories.save(name).getName();
     }
+
 
     @GetMapping("/api/getNames")
     public List<String> getNames(){
+        System.out.println(namesRepositories.findAllNames());
         return namesRepositories.findAllNames();
     }
 
