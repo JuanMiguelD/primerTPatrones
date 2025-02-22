@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'k8s-agent' }  
+    agent any
 
     environment {
         DOCKER_IMAGE = "juanmigueld/api_names"
