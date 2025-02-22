@@ -14,7 +14,7 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")  // Aplica a todas las rutas /api/*
-                        .allowedOrigins("http://miapp.com", "http://209.38.53.48")  // Permite ambos
+                        .allowedOrigins( "http://174.138.104.110")  // Permite ambos
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")  // Métodos permitidos
                         .allowCredentials(true);  // Permite cookies si es necesario
             }
