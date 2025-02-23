@@ -27,7 +27,7 @@ pipeline {
         HELM_RELEASE = "api-names"
         HELM_REPO_URL = "https://github.com/JuanMiguelD/api-names_chart.git"
         HELM_CHART_PATH = "api-names_chart"  // Carpeta donde clonar el repo
-        NAMESPACE = "default"
+        NAMESPACE = "jenkins"
     }
 
     stages {
