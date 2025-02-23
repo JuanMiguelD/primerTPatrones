@@ -5,26 +5,27 @@ pipeline {
             apiVersion: v1
             kind: Pod
             metadata:
-            labels:
+              labels:
                 app: jenkins-agent
             spec:
-            containers:
-            - name: docker
-                image: docker:24.0
+              containers:
+              - name: docker
+                image: docker:24.0.7-dind
+                securityContext:
+                  privileged: true
                 command:
                 - cat
                 tty: true
                 volumeMounts:
-                - name: docker-socket
-                mountPath: /var/run/docker.sock
-            volumes:
-            - name: docker-socket
+                - name: docker-sock
+                  mountPath: /var/run/docker.sock
+              volumes:
+              - name: docker-sock
                 hostPath:
-                path: /var/run/docker.sock
+                  path: /var/run/docker.sock
             """
         }
     }
-
 
     environment {
         DOCKER_IMAGE = "juanmigueld/api_names"
@@ -32,7 +33,7 @@ pipeline {
         HELM_RELEASE = "api-names"
         HELM_REPO_URL = "https://github.com/JuanMiguelD/api-names_chart.git"
         HELM_CHART_PATH = "api-names_chart"  // Carpeta donde clonar el repo
-        NAMESPACE = "default"
+        NAMESPACE = "jenkins"
     }
 
     stages {
@@ -44,17 +45,19 @@ pipeline {
 
         stage('Build & Push Docker Image') {
             steps {
-                script {
-                    sh "docker build -t $DOCKER_IMAGE:$DOCKER_TAG ."
-                    
-                    withCredentials([usernamePassword(credentialsId: 'DOCKER_CREDENTIALS', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PAT')]) {
-                        sh "echo $DOCKER_PAT | docker login -u $DOCKER_USER --password-stdin"
-                        sh "docker push $DOCKER_IMAGE:$DOCKER_TAG"
+                container('docker') {
+                    script {
+                        sh "docker version"
+                        sh "docker build -t $DOCKER_IMAGE:$DOCKER_TAG ."
+
+                        withCredentials([usernamePassword(credentialsId: 'DOCKER_CREDENTIALS', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PAT')]) {
+                            sh "echo $DOCKER_PAT | docker login -u $DOCKER_USER --password-stdin"
+                            sh "docker push $DOCKER_IMAGE:$DOCKER_TAG"
+                        }
                     }
                 }
             }
         }
-
 
         stage('Clone Helm Chart Repo') {
             steps {
