@@ -9,7 +9,8 @@ pipeline {
               containers:
               - name: kaniko
                 image: gcr.io/kaniko-project/executor:latest
-                args: ["--help"]
+                command: ["/kaniko/executor"]
+                args: ["--no-push"]  # Mantiene el contenedor corriendo para que Jenkins lo controle
                 tty: true
                 volumeMounts:
                 - name: docker-config
@@ -24,7 +25,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "juanmigueld/api_names"
-        DOCKER_TAG = "${env.BUILD_NUMBER ?: 'latest'}"  // Corregido
+        DOCKER_TAG = "${env.BUILD_NUMBER ?: 'latest'}"
         HELM_RELEASE = "api-names"
         HELM_REPO_URL = "https://github.com/JuanMiguelD/api-names_chart.git"
         HELM_CHART_PATH = "api-names_chart"  
@@ -56,7 +57,7 @@ pipeline {
         stage('Clone Helm Chart Repo') {
             steps {
                 script {
-                    sh "rm -rf $HELM_CHART_PATH"  
+                    sh "rm -rf $HELM_CHART_PATH"
                     sh "git clone $HELM_REPO_URL $HELM_CHART_PATH"
                 }
             }
