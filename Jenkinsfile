@@ -9,8 +9,7 @@ pipeline {
               containers:
               - name: kaniko
                 image: gcr.io/kaniko-project/executor:latest
-                command: ["/kaniko/executor"]
-                args: ["--no-push"]  # Mantiene el contenedor corriendo para que Jenkins lo controle
+                command: ["sleep", "infinity"]  # Mantiene el contenedor vivo
                 tty: true
                 volumeMounts:
                 - name: docker-config
@@ -28,7 +27,7 @@ pipeline {
         DOCKER_TAG = "${env.BUILD_NUMBER ?: 'latest'}"
         HELM_RELEASE = "api-names"
         HELM_REPO_URL = "https://github.com/JuanMiguelD/api-names_chart.git"
-        HELM_CHART_PATH = "api-names_chart"  
+        HELM_CHART_PATH = "api-names_chart"
         NAMESPACE = "jenkins"
     }
 
@@ -47,7 +46,8 @@ pipeline {
                             /kaniko/executor --dockerfile=Dockerfile \
                             --context=dir://$(pwd) \
                             --destination=$DOCKER_IMAGE:$DOCKER_TAG \
-                            --cache=true
+                            --cache=true \
+                            --skip-tls-verify
                         '''
                     }
                 }
