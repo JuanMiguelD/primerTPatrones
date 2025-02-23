@@ -16,10 +16,16 @@ pipeline {
                 command:
                 - cat
                 tty: true
+                volumeMounts:
+                - name: docker-sock
+                  mountPath: /var/run/docker.sock
+              volumes:
+              - name: docker-sock
+                hostPath:
+                  path: /var/run/docker.sock
             """
         }
     }
-
 
     environment {
         DOCKER_IMAGE = "juanmigueld/api_names"
@@ -52,7 +58,6 @@ pipeline {
                 }
             }
         }
-
 
         stage('Clone Helm Chart Repo') {
             steps {
