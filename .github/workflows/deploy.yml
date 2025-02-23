@@ -9,7 +9,7 @@ on:
 
 env:
   HELM_REPO: "JuanMiguelD/helmApi"
-  APP_NAME: "api_names"
+  APP_NAME: "api-names"
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
 
 jobs:
