@@ -13,9 +13,10 @@ pipeline {
                 - /kaniko/executor
                 args:
                 - --dockerfile=Dockerfile
-                - --context=dir://workspace
+                - --context=dir:///workspace
                 - --destination=juanmigueld/api_names:\${BUILD_NUMBER}
                 - --cache=true
+                - --verbosity=debug  # <-- Activa logs detallados
                 - --skip-tls-verify
                 volumeMounts:
                 - name: docker-config
@@ -48,7 +49,18 @@ pipeline {
             steps {
                 container('kaniko') {
                     script {
-                        echo "Ejecutando Kaniko para construir y subir la imagen..."
+                        sh ''' 
+                            echo "Verificando si Kaniko está disponible..."
+                            /kaniko/executor --help
+
+                            echo "Ejecutando Kaniko con logs detallados..."
+                            /kaniko/executor --dockerfile=Dockerfile \
+                            --context=dir:///workspace \
+                            --destination=$DOCKER_IMAGE:$DOCKER_TAG \
+                            --cache=true \
+                            --verbosity=debug \
+                            --skip-tls-verify
+                        '''
                     }
                 }
             }
