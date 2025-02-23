@@ -4,25 +4,26 @@ pipeline {
             yaml """
             apiVersion: v1
             kind: Pod
-            metadata:
-              labels:
-                app: jenkins-agent
             spec:
               containers:
-              - name: docker
-                image: docker:24.0.7-dind
-                securityContext:
-                  privileged: true
-                args: ["--host=unix:///var/run/docker.sock"]
-                tty: true
+              - name: kaniko
+                image: gcr.io/kaniko-project/executor:latest
+                command:
+                - /kaniko/executor
+                args:
+                - --dockerfile=Dockerfile
+                - --context=dir:///workspace
+                - --destination=juanmigueld/api_names:\${BUILD_NUMBER}
+                - --cache=true
+                - --verbosity=debug
+                - --skip-tls-verify
                 volumeMounts:
-                - name: docker-sock
-                  mountPath: /var/run/docker.sock
+                - name: docker-config
+                  mountPath: /kaniko/.docker/
               volumes:
-              - name: docker-sock
-                hostPath:
-                  path: /var/run/docker.sock
-                  type: Socket
+              - name: docker-config
+                secret:
+                  secretName: regcred
             """
         }
     }
@@ -45,15 +46,17 @@ pipeline {
 
         stage('Build & Push Docker Image') {
             steps {
-                container('docker') {
+                container('kaniko') {
                     script {
-                        sh "docker version"
-                        sh "docker build -t $DOCKER_IMAGE:$DOCKER_TAG ."
-
-                        withCredentials([usernamePassword(credentialsId: 'DOCKER_CREDENTIALS', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PAT')]) {
-                            sh "echo $DOCKER_PAT | docker login -u $DOCKER_USER --password-stdin"
-                            sh "docker push $DOCKER_IMAGE:$DOCKER_TAG"
-                        }
+                        sh ''' 
+                            echo "Ejecutando Kaniko..."
+                            /kaniko/executor --dockerfile=Dockerfile \
+                            --context=dir:///workspace \
+                            --destination=$DOCKER_IMAGE:$DOCKER_TAG \
+                            --cache=true \
+                            --verbosity=debug \
+                            --skip-tls-verify
+                        '''
                     }
                 }
             }
