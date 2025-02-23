@@ -7,17 +7,22 @@ pipeline {
         kind: Pod
         spec:
           containers:
-          - name: docker
-            image: docker:latest
-            command: ['cat']
+          - name: kaniko
+            image: gcr.io/kaniko-project/executor:latest
+            command:
+            - "/busybox/cat"
             tty: true
-          - name: helm
-            image: alpine/helm:latest
-            command: ['cat']
-            tty: true
+            volumeMounts:
+            - name: docker-config
+              mountPath: /kaniko/.docker/
+          volumes:
+          - name: docker-config
+            secret:
+              secretName: regcred
         """
         }
     }
+
  
     environment {
         DOCKER_IMAGE = "juanmigueld/api_names"
@@ -37,19 +42,19 @@ pipeline {
 
         stage('Build & Push Docker Image') {
             steps {
-                container('docker') {
+                container('kaniko') {
                     script {
-                        sh "docker version"
-                        sh "docker build -t $DOCKER_IMAGE:$DOCKER_TAG ."
-
-                        withCredentials([usernamePassword(credentialsId: 'DOCKER_CREDENTIALS', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PAT')]) {
-                            sh "echo $DOCKER_PAT | docker login -u $DOCKER_USER --password-stdin"
-                            sh "docker push $DOCKER_IMAGE:$DOCKER_TAG"
-                        }
+                        sh """
+                        /kaniko/executor --dockerfile=Dockerfile \
+                        --context=$(pwd) \
+                        --destination=$DOCKER_IMAGE:$DOCKER_TAG \
+                        --cache=true
+                        """
                     }
                 }
             }
         }
+
 
         stage('Clone Helm Chart Repo') {
             steps {
