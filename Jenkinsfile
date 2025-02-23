@@ -44,12 +44,13 @@ pipeline {
             steps {
                 container('kaniko') {
                     script {
-                        sh """
-                        /kaniko/executor --dockerfile=Dockerfile \
-                        --context=$(pwd) \
-                        --destination=$DOCKER_IMAGE:$DOCKER_TAG \
-                        --cache=true
-                        """
+                        sh ''' 
+                            /kaniko/executor --dockerfile=Dockerfile \
+                            --context=$(pwd) \
+                            --destination=$DOCKER_IMAGE:$DOCKER_TAG \
+                            --cache=true
+                        '''
+
                     }
                 }
             }
