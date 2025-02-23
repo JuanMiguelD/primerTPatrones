@@ -15,7 +15,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          java-version: '21'  
+          java-version: '21' 
           distribution: 'temurin'
 
       - name: Compile code with Maven
@@ -39,20 +39,33 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Checkout Helm charts repository
+      - name: Checkout Helm chart repository (helmApi)
         uses: actions/checkout@v3
         with:
-          repository: JuanMiguelD/api-names_chart  # Cambia esto al nombre de tu repositorio de charts
-          path: charts
-          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: JuanMiguelD/helmApi  
+          path: helm-chart  
+          token: ${{ secrets.TOKEN_GITHUB }}
 
-      - name: Update Helm chart
+      - name: Package Helm chart
         run: |
-          cd charts/api-names_chart  # Cambia esto a la ruta correcta dentro del repositorio de charts
+          cd helm-chart  # Cambia al directorio del chart
           sed -i "s/^version: .*/version: 1.3/" Chart.yaml  # Actualiza la versión del chart
           sed -i "s/^appVersion: .*/appVersion: 1.3/" Chart.yaml  # Actualiza la versión de la aplicación
           helm dependency update
           helm package .
+
+      - name: Checkout Helm repository (api-names_chart)
+        uses: actions/checkout@v3
+        with:
+          repository: JuanMiguelD/api-names_chart  
+          path: helm-repo  
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Helm repository
+        run: |
+          cd helm-repo  # Cambia al directorio del repositorio de charts
+          cp ../helm-chart/*.tgz .  # Copia el chart empaquetado
+          helm repo index .  # Actualiza el index.yaml
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           git add .
