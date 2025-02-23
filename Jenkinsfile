@@ -9,9 +9,14 @@ pipeline {
               containers:
               - name: kaniko
                 image: gcr.io/kaniko-project/executor:latest
-                command: ["/busybox/sh", "-c"]
-                args: ["while true; do sleep 30; done"]
-                tty: true
+                command:
+                - /kaniko/executor
+                args:
+                - --dockerfile=Dockerfile
+                - --context=dir://workspace
+                - --destination=juanmigueld/api_names:\${BUILD_NUMBER}
+                - --cache=true
+                - --skip-tls-verify
                 volumeMounts:
                 - name: docker-config
                   mountPath: /kaniko/.docker/
@@ -43,13 +48,7 @@ pipeline {
             steps {
                 container('kaniko') {
                     script {
-                        sh ''' 
-                            /kaniko/executor --dockerfile=Dockerfile \
-                            --context=dir://$(pwd) \
-                            --destination=$DOCKER_IMAGE:$DOCKER_TAG \
-                            --cache=true \
-                            --skip-tls-verify
-                        '''
+                        echo "Ejecutando Kaniko para construir y subir la imagen..."
                     }
                 }
             }
