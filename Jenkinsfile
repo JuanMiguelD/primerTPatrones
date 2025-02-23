@@ -1,35 +1,33 @@
 pipeline {
     agent {
-    kubernetes {
-        label 'my-k8s-agent'
-        yaml """
-        apiVersion: v1
-        kind: Pod
-        spec:
-          containers:
-          - name: kaniko
-            image: gcr.io/kaniko-project/executor:latest
-            command:
-            - "/busybox/cat"
-            tty: true
-            volumeMounts:
-            - name: docker-config
-              mountPath: /kaniko/.docker/
-          volumes:
-          - name: docker-config
-            secret:
-              secretName: regcred
-        """
+        kubernetes {
+            label 'my-k8s-agent'
+            yaml """
+            apiVersion: v1
+            kind: Pod
+            spec:
+              containers:
+              - name: kaniko
+                image: gcr.io/kaniko-project/executor:latest
+                args: ["--help"]
+                tty: true
+                volumeMounts:
+                - name: docker-config
+                  mountPath: /kaniko/.docker/
+              volumes:
+              - name: docker-config
+                secret:
+                  secretName: regcred
+            """
         }
     }
 
- 
     environment {
         DOCKER_IMAGE = "juanmigueld/api_names"
-        DDOCKER_TAG = "${env.BUILD_NUMBER ?: 'latest'}" // Tag dinámico
+        DOCKER_TAG = "${env.BUILD_NUMBER ?: 'latest'}"  // Corregido
         HELM_RELEASE = "api-names"
         HELM_REPO_URL = "https://github.com/JuanMiguelD/api-names_chart.git"
-        HELM_CHART_PATH = "api-names_chart"  // Carpeta donde clonar el repo
+        HELM_CHART_PATH = "api-names_chart"  
         NAMESPACE = "jenkins"
     }
 
@@ -46,21 +44,19 @@ pipeline {
                     script {
                         sh ''' 
                             /kaniko/executor --dockerfile=Dockerfile \
-                            --context=$(pwd) \
+                            --context=dir://$(pwd) \
                             --destination=$DOCKER_IMAGE:$DOCKER_TAG \
                             --cache=true
                         '''
-
                     }
                 }
             }
         }
 
-
         stage('Clone Helm Chart Repo') {
             steps {
                 script {
-                    sh "rm -rf $HELM_CHART_PATH"  // Borra si ya existe
+                    sh "rm -rf $HELM_CHART_PATH"  
                     sh "git clone $HELM_REPO_URL $HELM_CHART_PATH"
                 }
             }
