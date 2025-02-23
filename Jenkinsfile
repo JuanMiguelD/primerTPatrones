@@ -13,7 +13,7 @@ pipeline {
     stages {
         stage('Checkout Código') {
             steps {
-                git 'https://github.com/JuanMiguelD/primerTPatrones.git'
+                git branch: 'main', url: 'https://github.com/JuanMiguelD/primerTPatrones.git'
             }
         }
 
