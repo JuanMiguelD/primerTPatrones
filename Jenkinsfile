@@ -12,7 +12,7 @@ pipeline {
                 - /kaniko/executor
                 args:
                 - --dockerfile=Dockerfile
-                - --context=dir:///workspace
+                - --context=dir:///workspace/api-names_Pipeline
                 - --destination=juanmigueld/api_names:\${BUILD_NUMBER}
                 - --cache=true
                 - --verbosity=debug
@@ -20,6 +20,7 @@ pipeline {
                 volumeMounts:
                 - name: docker-config
                   mountPath: /kaniko/.docker/
+              restartPolicy: Never  # Evita reiniciar pods fallidos
               volumes:
               - name: docker-config
                 secret:
@@ -38,6 +39,14 @@ pipeline {
     }
 
     stages {
+        stage('Verificar Secreto Docker') {
+            steps {
+                script {
+                    sh "kubectl get secret regcred -n jenkins || echo '❌ ERROR: El secreto regcred no existe'"
+                }
+            }
+        }
+
         stage('Checkout Código') {
             steps {
                 git branch: 'main', url: 'https://github.com/JuanMiguelD/primerTPatrones.git'
@@ -48,10 +57,10 @@ pipeline {
             steps {
                 container('kaniko') {
                     script {
+                        echo "Ejecutando Kaniko con logs detallados..."
                         sh ''' 
-                            echo "Ejecutando Kaniko..."
                             /kaniko/executor --dockerfile=Dockerfile \
-                            --context=dir:///workspace \
+                            --context=dir:///workspace/api-names_Pipeline \
                             --destination=$DOCKER_IMAGE:$DOCKER_TAG \
                             --cache=true \
                             --verbosity=debug \
