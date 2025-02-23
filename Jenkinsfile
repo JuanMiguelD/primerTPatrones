@@ -1,31 +1,5 @@
 pipeline {
-    agent {
-        kubernetes {
-            yaml """
-            apiVersion: v1
-            kind: Pod
-            metadata:
-              labels:
-                app: jenkins-agent
-            spec:
-              containers:
-              - name: docker
-                image: docker:24.0.7-dind
-                securityContext:
-                  privileged: true
-                command:
-                - cat
-                tty: true
-                volumeMounts:
-                - name: docker-sock
-                  mountPath: /var/run/docker.sock
-              volumes:
-              - name: docker-sock
-                hostPath:
-                  path: /var/run/docker.sock
-            """
-        }
-    }
+    agent any
 
     environment {
         DOCKER_IMAGE = "juanmigueld/api_names"
