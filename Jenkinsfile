@@ -1,10 +1,24 @@
 pipeline {
     agent {
-        kubernetes {
-            label 'my-k8s-agent'
+    kubernetes {
+        label 'my-k8s-agent'
+        yaml """
+        apiVersion: v1
+        kind: Pod
+        spec:
+          containers:
+          - name: docker
+            image: docker:latest
+            command: ['cat']
+            tty: true
+          - name: helm
+            image: alpine/helm:latest
+            command: ['cat']
+            tty: true
+        """
         }
-    } 
-
+    }
+ 
     environment {
         DOCKER_IMAGE = "juanmigueld/api_names"
         DOCKER_TAG = "${env.BUILD_NUMBER}"  // Tag dinámico
