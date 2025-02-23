@@ -20,9 +20,12 @@ pipeline {
         stage('Build & Push Docker Image') {
             steps {
                 script {
-                    sh """
-                    /kaniko/executor --context=/workspace --dockerfile=/workspace/Dockerfile --destination=juanmigueld/api_names:$DOCKER_TAG
-                    """
+                    sh "docker build -t $DOCKER_IMAGE:$DOCKER_TAG ."
+                    
+                    withCredentials([usernamePassword(credentialsId: 'DOCKER_CREDENTIALS', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PAT')]) {
+                        sh "echo $DOCKER_PAT | docker login -u $DOCKER_USER --password-stdin"
+                        sh "docker push $DOCKER_IMAGE:$DOCKER_TAG"
+                    }
                 }
             }
         }
