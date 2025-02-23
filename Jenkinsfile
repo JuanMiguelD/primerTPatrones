@@ -34,7 +34,7 @@ pipeline {
             }
         }
 
-        stage('Verificar Contexto') {
+        stage('Verificar Contexto con tecto') {
             steps {
                 sh 'ls -la /workspace'
             }
