@@ -22,5 +22,6 @@ public class Names {
 
     public Names(String name){
         this.name = name;
+        
     }
 }
