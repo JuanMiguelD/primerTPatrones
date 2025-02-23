@@ -9,7 +9,8 @@ pipeline {
               containers:
               - name: kaniko
                 image: gcr.io/kaniko-project/executor:latest
-                command: ["sleep", "infinity"]  # Mantiene el contenedor vivo
+                command: ["/busybox/sh", "-c"]
+                args: ["while true; do sleep 30; done"]
                 tty: true
                 volumeMounts:
                 - name: docker-config
