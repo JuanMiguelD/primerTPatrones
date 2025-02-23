@@ -20,7 +20,9 @@ pipeline {
                   mountPath: /var/run/docker.sock
               volumes:
               - name: docker-sock
-                emptyDir: {}
+                hostPath:
+                  path: /var/run/docker.sock
+                  type: Socket
             """
         }
     }
@@ -45,9 +47,6 @@ pipeline {
             steps {
                 container('docker') {
                     script {
-                        sh "dockerd --host=unix:///var/run/docker.sock &"  // Inicia Docker Daemon
-                        sleep 10  // Espera a que Docker se inicie
-
                         sh "docker version"
                         sh "docker build -t $DOCKER_IMAGE:$DOCKER_TAG ."
 
