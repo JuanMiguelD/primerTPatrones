@@ -26,7 +26,7 @@ pipeline {
  
     environment {
         DOCKER_IMAGE = "juanmigueld/api_names"
-        DOCKER_TAG = "${env.BUILD_NUMBER}"  // Tag dinámico
+        DDOCKER_TAG = "${env.BUILD_NUMBER ?: 'latest'}" // Tag dinámico
         HELM_RELEASE = "api-names"
         HELM_REPO_URL = "https://github.com/JuanMiguelD/api-names_chart.git"
         HELM_CHART_PATH = "api-names_chart"  // Carpeta donde clonar el repo
