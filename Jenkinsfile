@@ -9,18 +9,14 @@ pipeline {
               - name: kaniko
                 image: gcr.io/kaniko-project/executor:latest
                 command:
-                - /kaniko/executor
+                - /busybox/sh
                 args:
-                - --dockerfile=Dockerfile
-                - --context=dir:///workspace/api-names_Pipeline
-                - --destination=juanmigueld/api_names:\${BUILD_NUMBER}
-                - --cache=true
-                - --verbosity=debug
-                - --skip-tls-verify
+                - -c
+                - "sleep 3600"
                 volumeMounts:
                 - name: docker-config
                   mountPath: /kaniko/.docker/
-              restartPolicy: Never  # Evita reiniciar pods fallidos
+              restartPolicy: Never
               volumes:
               - name: docker-config
                 secret:
@@ -39,10 +35,11 @@ pipeline {
     }
 
     stages {
-        stage('Verificar Secreto Docker') {
+        stage('Verificar Configuración') {
             steps {
                 script {
-                    sh "kubectl get secret regcred -n jenkins || echo '❌ ERROR: El secreto regcred no existe'"
+                    sh "kubectl get pods -n jenkins"
+                    sh "kubectl get secret regcred -n jenkins || echo '❌ ERROR: Secreto regcred no encontrado'"
                 }
             }
         }
@@ -53,13 +50,24 @@ pipeline {
             }
         }
 
-        stage('Build & Push Docker Image') {
+        stage('Verificar Código en Workspace') {
+            steps {
+                script {
+                    sh "ls -la /workspace/api-names_Pipeline || echo '❌ ERROR: Código no encontrado en /workspace/api-names_Pipeline'"
+                }
+            }
+        }
+
+        stage('Ejecutar Kaniko Manualmente') {
             steps {
                 container('kaniko') {
                     script {
-                        echo "Ejecutando Kaniko con logs detallados..."
-                        sh ''' 
-                            /kaniko/executor --dockerfile=Dockerfile \
+                        sh '''
+                            echo "🔍 Listando archivos en /workspace/api-names_Pipeline..."
+                            ls -la /workspace/api-names_Pipeline
+                            
+                            echo "🚀 Ejecutando Kaniko..."
+                            /kaniko/executor --dockerfile=/workspace/api-names_Pipeline/Dockerfile \
                             --context=dir:///workspace/api-names_Pipeline \
                             --destination=$DOCKER_IMAGE:$DOCKER_TAG \
                             --cache=true \
