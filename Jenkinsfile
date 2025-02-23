@@ -1,5 +1,9 @@
 pipeline {
-    agent any
+    agent {
+        kubernetes {
+            label 'my-k8s-agent'
+        }
+    } 
 
     environment {
         DOCKER_IMAGE = "juanmigueld/api_names"
