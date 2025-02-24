@@ -16,10 +16,10 @@ jobs:
       # Paso 2: Incrementar la versión automáticamente
       - name: Increment version
         id: version
-        uses: mathieudutour/github-tag-action@v6.2  # Usa la versión correcta
+        uses: mathieudutour/github-tag-action@v6.2
         with:
-          github_token: ${{ secrets.TOKEN_GITHUB }}  # Corregido: usa snake_case
-          tag_prefix: "v"  # Corregido: usa snake_case
+          github_token: ${{ secrets.TOKEN_GITHUB }}
+          tag_prefix: "v"
 
       # Paso 3: Configurar JDK
       - name: Set up JDK
@@ -49,8 +49,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: |
-            juanmigueld/api_names:${{ steps.version.outputs.new_tag }}  # Usa la nueva versión
+          tags: juanmigueld/api_names:${{ steps.version.outputs.new_tag }}  # Tag corregido
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -60,20 +59,20 @@ jobs:
         with:
           repository: JuanMiguelD/helmApi  
           path: helm-chart  
-          token: ${{ secrets.TOKEN_GITHUB }}  # Usa el PAT
+          token: ${{ secrets.TOKEN_GITHUB }}
 
       # Paso 9: Actualizar la versión en el Chart.yaml
       - name: Update Chart version
         run: |
-          cd helm-chart  # Cambia al directorio del chart
-          NEW_VERSION=${{ steps.version.outputs.new_tag }}  # Obtén la nueva versión
-          sed -i "s/^version: .*/version: ${NEW_VERSION#v}/" Chart.yaml  # Actualiza la versión del chart
-          sed -i "s/^appVersion: .*/appVersion: ${NEW_VERSION#v}/" Chart.yaml  # Actualiza la versión de la aplicación
+          cd helm-chart
+          NEW_VERSION=${{ steps.version.outputs.new_tag }}
+          sed -i "s/^version: .*/version: ${NEW_VERSION#v}/" Chart.yaml
+          sed -i "s/^appVersion: .*/appVersion: ${NEW_VERSION#v}/" Chart.yaml
 
       # Paso 10: Empaquetar el Helm chart
       - name: Package Helm chart
         run: |
-          cd helm-chart  # Cambia al directorio del chart
+          cd helm-chart
           helm dependency update
           helm package .
 
@@ -83,7 +82,7 @@ jobs:
         with:
           repository: JuanMiguelD/api-names_chart
           path: helm-repo
-          token: ${{ secrets.TOKEN_GITHUB }}  # Usa el PAT
+          token: ${{ secrets.TOKEN_GITHUB }}
           ssh-strict: true
           persist-credentials: true
           clean: true
@@ -97,9 +96,9 @@ jobs:
       # Paso 12: Actualizar el repositorio de Helm
       - name: Update Helm repository
         run: |
-          cd helm-repo  # Cambia al directorio del repositorio de charts
-          cp ../helm-chart/*.tgz .  # Copia el chart empaquetado
-          helm repo index .  # Actualiza el index.yaml
+          cd helm-repo
+          cp ../helm-chart/*.tgz .
+          helm repo index .
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           git add .
