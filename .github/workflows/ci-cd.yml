@@ -16,7 +16,7 @@ jobs:
       # Paso 2: Incrementar la versión automáticamente
       - name: Increment version
         id: version
-        uses: mathieudutour/github-tag-action@v6.0.0  # Usa la versión correcta
+        uses: mathieudutour/github-tag-action@v6.2  # Usa la versión correcta
         with:
           github-token: ${{ secrets.TOKEN_GITHUB }}
           tag-prefix: "v"  # Opcional: agrega un prefijo "v" a las versiones (por ejemplo, v1.3.0)
