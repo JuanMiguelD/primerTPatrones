@@ -18,8 +18,8 @@ jobs:
         id: version
         uses: mathieudutour/github-tag-action@v6.2  # Usa la versión correcta
         with:
-          github-token: ${{ secrets.TOKEN_GITHUB }}
-          tag-prefix: "v"  # Opcional: agrega un prefijo "v" a las versiones (por ejemplo, v1.3.0)
+          github_token: ${{ secrets.TOKEN_GITHUB }}  # Corregido: usa snake_case
+          tag_prefix: "v"  # Corregido: usa snake_case
 
       # Paso 3: Configurar JDK
       - name: Set up JDK
