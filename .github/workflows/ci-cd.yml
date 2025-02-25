@@ -1,0 +1,107 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main  
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      # Paso 1: Checkout del código fuente
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Paso 2: Incrementar la versión automáticamente
+      - name: Increment version
+        id: version
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.TOKEN_GITHUB }}
+          tag_prefix: "v"
+
+      # Paso 3: Configurar JDK
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21' 
+          distribution: 'temurin'
+
+      # Paso 4: Compilar el código con Maven
+      - name: Compile code with Maven
+        run: mvn clean package
+
+      # Paso 5: Configurar Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Paso 6: Iniciar sesión en Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      # Paso 7: Construir y subir la imagen de Docker
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: juanmigueld/api_names:${{ steps.version.outputs.new_tag }}  # Tag corregido
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Paso 8: Checkout del repositorio del Helm chart (helmApi)
+      - name: Checkout Helm chart repository (helmApi)
+        uses: actions/checkout@v3
+        with:
+          repository: JuanMiguelD/helmApi  
+          path: helm-chart  
+          token: ${{ secrets.TOKEN_GITHUB }}
+
+      # Paso 9: Actualizar la versión en el Chart.yaml
+      - name: Update Chart version
+        run: |
+          cd helm-chart
+          NEW_VERSION=${{ steps.version.outputs.new_tag }}
+          sed -i "s/^version: .*/version: ${NEW_VERSION#v}/" Chart.yaml
+          sed -i "s/^appVersion: .*/appVersion: ${NEW_VERSION#v}/" Chart.yaml
+
+      # Paso 10: Empaquetar el Helm chart
+      - name: Package Helm chart
+        run: |
+          cd helm-chart
+          helm dependency update
+          helm package .
+
+      # Paso 11: Checkout del repositorio de Helm (api-names_chart)
+      - name: Checkout Helm repository (api-names_chart)
+        uses: actions/checkout@v3
+        with:
+          repository: JuanMiguelD/api-names_chart
+          path: helm-repo
+          token: ${{ secrets.TOKEN_GITHUB }}
+          ssh-strict: true
+          persist-credentials: true
+          clean: true
+          sparse-checkout-cone-mode: true
+          fetch-depth: 1
+          fetch-tags: false
+          lfs: false
+          submodules: false
+          set-safe-directory: true
+
+      # Paso 12: Actualizar el repositorio de Helm
+      - name: Update Helm repository
+        run: |
+          cd helm-repo
+          cp ../helm-chart/*.tgz .
+          helm repo index .
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add .
+          git commit -m "Update chart to version ${{ steps.version.outputs.new_tag }}"
+          git remote set-url origin https://${{ secrets.TOKEN_GITHUB }}@github.com/JuanMiguelD/api-names_chart.git
+          git push origin main
