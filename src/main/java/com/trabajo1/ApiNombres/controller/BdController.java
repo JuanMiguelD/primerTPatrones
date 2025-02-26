@@ -33,6 +33,7 @@ public class BdController {
         return namesRepositories.findAllNames();
     }
 
+    //Nueva funcionalidad 
     @DeleteMapping("/api/deleteName/{name}")
     public ResponseEntity<String> deleteName(@PathVariable String name) {
     try {
