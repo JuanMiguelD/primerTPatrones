@@ -49,20 +49,23 @@ pipeline {
             steps {
                 container('docker') {
                     script {
-                        sh '''
-                            # Configurar autenticación de Docker usando el secreto
-                            mkdir -p ~/.docker
-                            cp /var/run/secrets/kubernetes.io/serviceaccount/regcred ~/.docker/config.json
-                            
-                            # Construir y etiquetar la imagen
-                            docker build -t juanmigueld/api_names:${BUILD_NUMBER} .
-                            
-                            # Empujar la imagen al registro
-                            docker push juanmigueld/api_names:${BUILD_NUMBER}
-                        '''
+                        // Usamos credenciales almacenadas en Jenkins en lugar de buscar en el pod
+                        withCredentials([usernamePassword(credentialsId: 'DOCKER_CREDENTIALS', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                            sh '''
+                                # Login a Docker Hub con las credenciales de Jenkins
+                                echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+                                
+                                # Construir y etiquetar la imagen
+                                docker build -t juanmigueld/api_names:${BUILD_NUMBER} .
+                                
+                                # Empujar la imagen al registro
+                                docker push juanmigueld/api_names:${BUILD_NUMBER}
+                            '''
+                        }
                     }
                 }
             }
         }
+
     }
 }
