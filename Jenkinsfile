@@ -6,19 +6,21 @@ pipeline {
             kind: Pod
             spec:
               containers:
-              - name: kaniko
-                image: gcr.io/kaniko-project/executor:latest
+              - name: maven
+                image: maven:3.8.1-openjdk-21
+                command:
+                - sleep
                 args:
-                - --dockerfile=Dockerfile  # Ajusta la ruta si es necesario
-                - --context=dir:///workspace
-                - --destination=juanmigueld/api_names:${BUILD_NUMBER}
-                - --cache=true
-                - --verbosity=debug
-                - --skip-tls-verify
+                - infinity
+              - name: docker
+                image: docker:latest
+                command:
+                - sleep
+                args:
+                - infinity
                 volumeMounts:
-                - name: docker-config
-                  mountPath: /kaniko/.docker/
-              restartPolicy: Never
+                - name: docker-sock
+                  mountPath: /var/run/docker.sock
               volumes:
               - name: docker-config
                 secret:
