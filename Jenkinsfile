@@ -22,6 +22,9 @@ pipeline {
                 - name: docker-sock
                   mountPath: /var/run/docker.sock
               volumes:
+              - name: docker-sock
+                hostPath:
+                  path: /var/run/docker.sock
               - name: docker-config
                 secret:
                   secretName: regcred
@@ -36,23 +39,26 @@ pipeline {
             }
         }
 
-        stage('Verificar Contexto con tecto') {
+        stage('Verificar Contexto') {
             steps {
-                sh 'ls -la /workspace'
+                sh 'ls -la'
             }
         }
 
         stage('Build & Push Docker Image') {
             steps {
-                container('kaniko') {
+                container('docker') {
                     script {
-                        sh ''' 
-                            /kaniko/executor --dockerfile=Dockerfile \
-                            --context=dir:///workspace \
-                            --destination=juanmigueld/api_names:${BUILD_NUMBER} \
-                            --cache=true \
-                            --verbosity=debug \
-                            --skip-tls-verify
+                        sh '''
+                            # Configurar autenticación de Docker usando el secreto
+                            mkdir -p ~/.docker
+                            cp /var/run/secrets/kubernetes.io/serviceaccount/regcred ~/.docker/config.json
+                            
+                            # Construir y etiquetar la imagen
+                            docker build -t juanmigueld/api_names:${BUILD_NUMBER} .
+                            
+                            # Empujar la imagen al registro
+                            docker push juanmigueld/api_names:${BUILD_NUMBER}
                         '''
                     }
                 }
