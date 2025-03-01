@@ -7,7 +7,7 @@ pipeline {
             spec:
               containers:
               - name: maven
-                image: maven:3.9.5-openjdk-21
+                image: eclipse-temurin:21-jdk
                 command:
                 - sleep
                 args:
